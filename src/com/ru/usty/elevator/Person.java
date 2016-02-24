@@ -2,12 +2,12 @@ package com.ru.usty.elevator;
 
 public class Person implements Runnable{
 	
-/*	int source, destination;
-	
-	public Person(int src, int dest) {
-		this.source = src;
-		this.destination = dest;
-	} */
+	int startFloor, destinationFloor;
+	//með þessu veit þáðurinn á hvaða hæð hann kom inn og hvar hann vill út
+	public Person(int startFloor, int destinationFloor) {
+		this.startFloor = startFloor;
+		this.destinationFloor = destinationFloor;
+	} 
 	
 	@Override
 	public void run() {
@@ -18,6 +18,11 @@ public class Person implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
+		
+		//ef þráðurinn er kominn hingað þá er hann laus, s.s úr röðinni
+		// --> þá þarf hann að lækka peopleCounterinn á þeirri hæð sem hann kom inn
+		ElevatorScene.scene.decrementNrOfPeopleWaitingAtFloor(startFloor);
+		
 		
 		System.out.println("Person thread released"); //bara til að tjékka hvenær hann losnar
 	}

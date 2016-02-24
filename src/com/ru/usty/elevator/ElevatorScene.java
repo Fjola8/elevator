@@ -16,6 +16,10 @@ public class ElevatorScene {
 	//static = bara til ein útgáfa af þessu
 	public static Semaphore semaphore1;
 	
+	public static Semaphore personCountMutex;
+	
+	public static ElevatorScene scene;
+	
 	//TO SPEED THINGS UP WHEN TESTING,
 	//feel free to change this.  It will be changed during grading
 	public static final int VISUALIZATION_WAIT_TIME = 500;  //milliseconds
@@ -32,8 +36,6 @@ public class ElevatorScene {
 	//Necessary to add your code in this one
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
-		//inní sviganum -> hvað eru mörg permits opin í uppahafi
-		semaphore1 = new Semaphore(0);  //læst
 		/**
 		 * Important to add code here to make new
 		 * threads that run your elevator-runnables
@@ -45,6 +47,28 @@ public class ElevatorScene {
 		 * elevator threads to stop
 		 */
 
+		scene = this;
+		
+		//inní sviganum -> hvað eru mörg permits opin í uppahafi
+		semaphore1 = new Semaphore(0);  //læst
+		
+		/*fyrsta person sem kesmt inní þessa semaphoru kemst í gegn og mun 
+		setja semaphoruna = 0 og þá kemst enginn annar inní hana á meðan,
+		svo þegar hann fer út verður semaphoran aftur = 1 og næsti kemst að 
+		*/
+		personCountMutex = new Semaphore(1);
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for(int i = 0; i < 16; i++) {
+					ElevatorScene.semaphore1.release(); //signal
+				}
+			}
+		}).start();
+		
+		
+		
 		this.numberOfFloors = numberOfFloors;
 		this.numberOfElevators = numberOfElevators;
 
@@ -68,7 +92,7 @@ public class ElevatorScene {
 		 */
 		
 		//búa til tilvik af person klasanum, seinna setjum við inn source og dest
-		Person person = new Person();
+		Person person = new Person(sourceFloor, destinationFloor);
 		
 		//thread tekur inn runnable -> person er runnable og fer því þar inn
 		Thread thread = new Thread(person);
@@ -77,7 +101,7 @@ public class ElevatorScene {
 		
 		
 		
-		//dumb code, replace it!
+		//dumb code, replace it! ÞARF að vera betur thread safe
 		personCount.set(sourceFloor, personCount.get(sourceFloor) + 1);
 		
 		return thread; //this means that the testSuite will not wait for the threads to finish
@@ -107,6 +131,18 @@ public class ElevatorScene {
 		return personCount.get(floor);
 	}
 
+	//Við útfærðum þetta - lækkum personCount um 1:
+	public void decrementNrOfPeopleWaitingAtFloor(int floor) {
+		try {
+			personCountMutex.acquire();
+				personCount.set(floor, (personCount.get(floor) - 1));
+			personCountMutex.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	//Base function: definition must not change, but add your code if needed
 	public int getNumberOfFloors() {
 		return numberOfFloors;
