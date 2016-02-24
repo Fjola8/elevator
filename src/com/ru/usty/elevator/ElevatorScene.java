@@ -18,6 +18,10 @@ public class ElevatorScene {
 	
 	public static Semaphore personCountMutex;
 	
+	/*til að vernda semaphorurnar sem hleypa okkur inn i lyfturnar, 
+	  kannski að nota sama á semaphorurnar sem hleypa okkur út úr lyftunum*/
+	public static Semaphore elevatorWaitMutex; 
+	
 	public static ElevatorScene scene;
 	
 	//TO SPEED THINGS UP WHEN TESTING,
@@ -47,6 +51,7 @@ public class ElevatorScene {
 		 * elevator threads to stop
 		 */
 
+		
 		scene = this;
 		
 		//inní sviganum -> hvað eru mörg permits opin í uppahafi
@@ -57,6 +62,8 @@ public class ElevatorScene {
 		svo þegar hann fer út verður semaphoran aftur = 1 og næsti kemst að 
 		*/
 		personCountMutex = new Semaphore(1);
+		
+		elevatorWaitMutex = new Semaphore(1);
 		
 		new Thread(new Runnable() {
 			@Override
@@ -98,11 +105,7 @@ public class ElevatorScene {
 		Thread thread = new Thread(person);
 		thread.start();
 		
-		
-		
-		
-		//dumb code, replace it! ÞARF að vera betur thread safe
-		personCount.set(sourceFloor, personCount.get(sourceFloor) + 1);
+		incrementNrOfPeopleWaitingAtFloor(sourceFloor);
 		
 		return thread; //this means that the testSuite will not wait for the threads to finish
 	}
@@ -116,8 +119,11 @@ public class ElevatorScene {
 
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleInElevator(int elevator) {
+		/*Þetta er bara bull kóði ! Þurfum að útfæra:
+		   -> incrementNrOfPeopleInElevator og decrement föll
+		 */
+		//mutual exclusion
 		
-		//dumb code, replace it!
 		switch(elevator) {
 		case 1: return 1;
 		case 2: return 4;
@@ -136,6 +142,17 @@ public class ElevatorScene {
 		try {
 			personCountMutex.acquire();
 				personCount.set(floor, (personCount.get(floor) - 1));
+			personCountMutex.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void incrementNrOfPeopleWaitingAtFloor(int floor) {
+		try {
+			personCountMutex.acquire();
+				personCount.set(floor, (personCount.get(floor) + 1));
 			personCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
