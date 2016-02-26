@@ -13,7 +13,12 @@ public class Person implements Runnable{
 	public void run() {
 		//Tjékka á semaphore-unni:
 		try {
-			ElevatorScene.semaphore1.acquire(); //wait fallið okkar
+			ElevatorScene.elevatorWaitMutex.acquire();
+			
+				ElevatorScene.queueSemaphore.acquire(); //wait fallið okkar
+				
+			ElevatorScene.elevatorWaitMutex.release();
+			
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

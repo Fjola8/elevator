@@ -14,7 +14,7 @@ import java.util.concurrent.Semaphore;
 public class ElevatorScene {
 
 	//static = bara til ein útgáfa af þessu
-	public static Semaphore semaphore1;
+	public static Semaphore queueSemaphore;
 	
 	public static Semaphore personCountMutex;
 	
@@ -22,12 +22,15 @@ public class ElevatorScene {
 	  kannski að nota sama á semaphorurnar sem hleypa okkur út úr lyftunum*/
 	public static Semaphore elevatorWaitMutex; 
 	
+	public static Semaphore elevatorPersonCountMutex;
+	
 	public static ElevatorScene scene;
 	
 	//TO SPEED THINGS UP WHEN TESTING,
 	//feel free to change this.  It will be changed during grading
 	public static final int VISUALIZATION_WAIT_TIME = 500;  //milliseconds
 
+	private int nrOfPeopleInElevator;
 	private int numberOfFloors;
 	private int numberOfElevators;
 
@@ -40,40 +43,21 @@ public class ElevatorScene {
 	//Necessary to add your code in this one
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
-		/**
-		 * Important to add code here to make new
-		 * threads that run your elevator-runnables
-		 * 
-		 * Also add any other code that initializes
-		 * your system for a new run
-		 * 
-		 * If you can, tell any currently running
-		 * elevator threads to stop
-		 */
-
-		
 		scene = this;
 		
-		//inní sviganum -> hvað eru mörg permits opin í uppahafi
-		semaphore1 = new Semaphore(0);  //læst
+		queueSemaphore = new Semaphore(0);  //læst
 		
-		/*fyrsta person sem kesmt inní þessa semaphoru kemst í gegn og mun 
-		setja semaphoruna = 0 og þá kemst enginn annar inní hana á meðan,
-		svo þegar hann fer út verður semaphoran aftur = 1 og næsti kemst að 
-		*/
-		personCountMutex = new Semaphore(1);
-		
+		personCountMutex = new Semaphore(1); /*fyrsta person sem kesmt inní þessa semaphoru kemst í gegn og mun 
+												setja semaphoruna = 0 og þá kemst enginn annar inní hana á meðan,
+												svo þegar hann fer út verður semaphoran aftur = 1 og næsti kemst að */	
 		elevatorWaitMutex = new Semaphore(1);
 		
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				for(int i = 0; i < 16; i++) {
-					ElevatorScene.semaphore1.release(); //signal
-				}
-			}
-		}).start();
 		
+		
+	
+		Elevator elevator = new Elevator();
+		Thread thread = new Thread(elevator);
+		thread.start();
 		
 		
 		this.numberOfFloors = numberOfFloors;
@@ -88,15 +72,6 @@ public class ElevatorScene {
 	//Base function: definition must not change
 	//Necessary to add your code in this one
 	public Thread addPerson(int sourceFloor, int destinationFloor) {
-
-		/**
-		 * Important to add code here to make a
-		 * new thread that runs your person-runnable
-		 * 
-		 * Also return the Thread object for your person
-		 * so that it can be reaped in the testSuite
-		 * (you don't have to join() yourself)
-		 */
 		
 		//búa til tilvik af person klasanum, seinna setjum við inn source og dest
 		Person person = new Person(sourceFloor, destinationFloor);
@@ -119,18 +94,29 @@ public class ElevatorScene {
 
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleInElevator(int elevator) {
-		/*Þetta er bara bull kóði ! Þurfum að útfæra:
-		   -> incrementNrOfPeopleInElevator og decrement föll
-		 */
 		//mutual exclusion
 		
-		switch(elevator) {
+		return nrOfPeopleInElevator;
+		
+		
+	/*	switch(elevator) {
 		case 1: return 1;
 		case 2: return 4;
 		default: return 3;
-		}
+		} */
+	}
+	
+	public int incrementNrOfPeopleInElevator(int elevator) {
+		
+		return nrOfPeopleInElevator + 1;
 	}
 
+	public int decrementNrOfPeopleInElevator(int elevator) {
+		
+		return nrOfPeopleInElevator - 1;
+	}
+	
+	
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleWaitingAtFloor(int floor) {
 
