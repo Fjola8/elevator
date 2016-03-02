@@ -11,12 +11,10 @@ public class Person implements Runnable{
 	
 	@Override
 	public void run() {
-		//Tjékka á semaphore-unni:
+		
 		try {
 			ElevatorScene.elevatorWaitMutex.acquire();
-			
-				ElevatorScene.queueSemaphore.acquire(); //wait fallið okkar
-				
+				ElevatorScene.inSemaphore.acquire();
 			ElevatorScene.elevatorWaitMutex.release();
 			
 		} catch (InterruptedException e) {
@@ -24,12 +22,11 @@ public class Person implements Runnable{
 			e.printStackTrace();
 		} 
 		
-		//ef þráðurinn er kominn hingað þá er hann laus, s.s úr röðinni
-		// --> þá þarf hann að lækka peopleCounterinn á þeirri hæð sem hann kom inn
 		ElevatorScene.scene.decrementNrOfPeopleWaitingAtFloor(startFloor);
-		
-		
-		System.out.println("Person thread released"); //bara til að tjékka hvenær hann losnar
+		ElevatorScene.scene.incrementNrOfPeopleInElevator();
+		System.out.println("Person thread released"); 
+		int coun = ElevatorScene.scene.getNumberOfPeopleInElevator(0);
+		System.out.println("numberOfPeopleInEle" + coun);
 	}
 }
 

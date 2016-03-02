@@ -12,16 +12,15 @@ import java.util.concurrent.Semaphore;
  */
 
 public class ElevatorScene {
+	
+	ArrayList<Integer> exitedCount = null;
+	public static Semaphore exitedCountMutex;
 
-	//static = bara til ein útgáfa af þessu
-	public static Semaphore queueSemaphore;
+	public static Semaphore inSemaphore;
+	public static Semaphore outSemaphore;
 	
 	public static Semaphore personCountMutex;
-	
-	/*til að vernda semaphorurnar sem hleypa okkur inn i lyfturnar, 
-	  kannski að nota sama á semaphorurnar sem hleypa okkur út úr lyftunum*/
 	public static Semaphore elevatorWaitMutex; 
-	
 	public static Semaphore elevatorPersonCountMutex;
 	
 	public static ElevatorScene scene;
@@ -33,7 +32,7 @@ public class ElevatorScene {
 	private int nrOfPeopleInElevator;
 	private int numberOfFloors;
 	private int numberOfElevators;
-
+	private int currentFloor;
 	ArrayList<Integer> personCount; //use if you want but
 									//throw away and
 									//implement differently
@@ -44,22 +43,15 @@ public class ElevatorScene {
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
 		scene = this;
-		
-		queueSemaphore = new Semaphore(0);  //læst
-		
-		personCountMutex = new Semaphore(1); /*fyrsta person sem kesmt inní þessa semaphoru kemst í gegn og mun 
-												setja semaphoruna = 0 og þá kemst enginn annar inní hana á meðan,
-												svo þegar hann fer út verður semaphoran aftur = 1 og næsti kemst að */	
+		inSemaphore = new Semaphore(0);
+		personCountMutex = new Semaphore(1); 	
 		elevatorWaitMutex = new Semaphore(1);
 		
-		
-		
-	
-		Elevator elevator = new Elevator();
+		Elevator elevator = new Elevator(currentFloor);
 		Thread thread = new Thread(elevator);
 		thread.start();
-		
-		
+		System.out.println("elevator added");
+			
 		this.numberOfFloors = numberOfFloors;
 		this.numberOfElevators = numberOfElevators;
 
@@ -67,59 +59,71 @@ public class ElevatorScene {
 		for(int i = 0; i < numberOfFloors; i++) {
 			this.personCount.add(0);
 		}
+		
+		if(exitedCount == null) {
+			exitedCount = new ArrayList<Integer>();
+		}
+		else {
+			exitedCount.clear();
+		}
+		for(int i = 0; i < getNumberOfFloors(); i++) {
+			this.exitedCount.add(0);
+		}
+		exitedCountMutex = new Semaphore(1);
+		
 	}
 
 	//Base function: definition must not change
 	//Necessary to add your code in this one
 	public Thread addPerson(int sourceFloor, int destinationFloor) {
 		
-		//búa til tilvik af person klasanum, seinna setjum við inn source og dest
 		Person person = new Person(sourceFloor, destinationFloor);
-		
-		//thread tekur inn runnable -> person er runnable og fer því þar inn
 		Thread thread = new Thread(person);
 		thread.start();
 		
 		incrementNrOfPeopleWaitingAtFloor(sourceFloor);
-		
+		System.out.println("person added");
 		return thread; //this means that the testSuite will not wait for the threads to finish
 	}
 
 	//Base function: definition must not change, but add your code
 	public int getCurrentFloorForElevator(int elevator) {
-
 		//dumb code, replace it!
 		return 1;
 	}
 
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleInElevator(int elevator) {
-		//mutual exclusion
-		
+
 		return nrOfPeopleInElevator;
-		
-		
-	/*	switch(elevator) {
-		case 1: return 1;
-		case 2: return 4;
-		default: return 3;
-		} */
 	}
 	
-	public int incrementNrOfPeopleInElevator(int elevator) {
-		
-		return nrOfPeopleInElevator + 1;
+	public void incrementNrOfPeopleInElevator() {
+		System.out.println("hækka  people í lyftu!");
+		nrOfPeopleInElevator++;
+	/*	try{
+			elevatorPersonCountMutex.acquire();
+			nrOfPeopleInElevator ++;
+			elevatorPersonCountMutex.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
 
-	public int decrementNrOfPeopleInElevator(int elevator) {
-		
-		return nrOfPeopleInElevator - 1;
+	public void decrementNrOfPeopleInElevator() {
+		try{
+			elevatorPersonCountMutex.acquire();
+			nrOfPeopleInElevator --;
+			elevatorPersonCountMutex.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
-	
 	
 	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleWaitingAtFloor(int floor) {
-
 		return personCount.get(floor);
 	}
 
@@ -179,5 +183,28 @@ public class ElevatorScene {
 
 		return (getNumberOfPeopleWaitingAtFloor(floor) > 0);
 	}
+	
+	public void personExitsAtFloor(int floor) {
+		try {
+			
+			exitedCountMutex.acquire();
+			exitedCount.set(floor, (exitedCount.get(floor) + 1));
+			exitedCountMutex.release();
+
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public int getExitedCountAtFloor(int floor) {
+		if(floor < getNumberOfFloors()) {
+			return exitedCount.get(floor);
+		}
+		else {
+			return 0;
+		}
+	}
+
 
 }
