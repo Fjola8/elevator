@@ -13,10 +13,9 @@ public class Person implements Runnable{
 	public void run() {
 		
 		try {
-			ElevatorScene.elevatorWaitMutex.acquire();
+			//ElevatorScene.elevatorWaitMutex.acquire();
 				ElevatorScene.inSemaphore.acquire();
-			ElevatorScene.elevatorWaitMutex.release();
-			
+		//	ElevatorScene.elevatorWaitMutex.release();		
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -27,18 +26,20 @@ public class Person implements Runnable{
 		System.out.println("Person thread released"); 
 		int coun = ElevatorScene.scene.getNumberOfPeopleInElevator(0);
 		System.out.println("numberOfPeopleInEle" + coun);
+		
+		try {
+	//		ElevatorScene.elevatorWaitMutex.acquire();
+				ElevatorScene.outSemaphore.acquire();
+	//		ElevatorScene.elevatorWaitMutex.release();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		ElevatorScene.scene.decrementNrOfPeopleInElevator();
+		ElevatorScene.scene.personExitsAtFloor(1);
+		System.out.println("Person thread released OUT");
+		
 	}
 }
 
-/*Manneskja er þráður sem þarf að bíða á semaphoru sem hleypir henni inní lyftu
-þegar hún kemst inní lyftinu þá bíður hún á semaphoru sem hleypur henni út á þerri 
-hæð sem hún er komin á - sú lyfta þarf að vera tengd við semaphoru þannig að 
-þegar hún kemst á rétta hæð þá losar hún semphoruna (jafnmarga og þarf)
-*/
-
-/* Þegar persóna kemur inní röðina, er einhver semaphora sem hún á að wait á?
-og á hún að signala eitthvað þegar hún er komin inn í lyftuna..
-*/
-
-/* Þegar lyfta yfirgefur hæð þarf hún að waita eða signala? 
- * Þarf hún að passa að núlla? */

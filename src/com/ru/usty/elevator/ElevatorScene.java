@@ -27,12 +27,12 @@ public class ElevatorScene {
 	
 	//TO SPEED THINGS UP WHEN TESTING,
 	//feel free to change this.  It will be changed during grading
-	public static final int VISUALIZATION_WAIT_TIME = 500;  //milliseconds
+	public static final int VISUALIZATION_WAIT_TIME = 3000;  //milliseconds
 
 	private int nrOfPeopleInElevator;
 	private int numberOfFloors;
 	private int numberOfElevators;
-	private int currentFloor;
+	private int currentFloor = 0;
 	ArrayList<Integer> personCount; //use if you want but
 									//throw away and
 									//implement differently
@@ -44,8 +44,10 @@ public class ElevatorScene {
 		
 		scene = this;
 		inSemaphore = new Semaphore(0);
+		outSemaphore = new Semaphore(0);
 		personCountMutex = new Semaphore(1); 	
 		elevatorWaitMutex = new Semaphore(1);
+		
 		
 		Elevator elevator = new Elevator(currentFloor);
 		Thread thread = new Thread(elevator);
@@ -89,7 +91,7 @@ public class ElevatorScene {
 	//Base function: definition must not change, but add your code
 	public int getCurrentFloorForElevator(int elevator) {
 		//dumb code, replace it!
-		return 1;
+		return currentFloor;
 	}
 
 	//Base function: definition must not change, but add your code
@@ -100,26 +102,28 @@ public class ElevatorScene {
 	
 	public void incrementNrOfPeopleInElevator() {
 		System.out.println("hækka  people í lyftu!");
-		nrOfPeopleInElevator++;
-	/*	try{
+	//	nrOfPeopleInElevator++;
+		try{
 			elevatorPersonCountMutex.acquire();
 			nrOfPeopleInElevator ++;
 			elevatorPersonCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 	}
 
 	public void decrementNrOfPeopleInElevator() {
-		try{
+		System.out.println("Lækka  people í lyftu!");
+		nrOfPeopleInElevator--;
+		/*try{
 			elevatorPersonCountMutex.acquire();
 			nrOfPeopleInElevator --;
 			elevatorPersonCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	
+		}	*/
 	}
 	
 	//Base function: definition must not change, but add your code
@@ -149,6 +153,18 @@ public class ElevatorScene {
 			e.printStackTrace();
 		}
 	}
+	
+	public void changeFloor(){
+		
+		if(currentFloor == 0){
+			currentFloor++;
+		}
+		else{
+			currentFloor--;
+		}
+	}
+	
+	
 	
 	//Base function: definition must not change, but add your code if needed
 	public int getNumberOfFloors() {
