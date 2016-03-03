@@ -12,7 +12,7 @@ public class Person implements Runnable{
 	
 	@Override
 	public void run() {
-		int numberOfElevator = elevController.getElevator();
+		int numberOfElevator = elevController.returnElevator();
 		
 		try {
 			ElevatorScene.inSemaphores.get(startFloor).acquire();

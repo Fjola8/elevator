@@ -3,44 +3,45 @@ package com.ru.usty.elevator;
 public class Elevator implements Runnable{
 	
 	private static int MAX_PEOPLE = 6;
-	private int number;
+	private int elevatorNr;
 	
-	Elevator(int number)
-	{
-		this.number = number;
+	Elevator(int elevator){
+		this.elevatorNr = elevator;
 	}
 	
 	@Override
 	public void run() 
 	{
 		while(true){
-			try{
-				int extraSpace = MAX_PEOPLE - ElevatorScene.scene.getNumberOfPeopleInElevator(this.number);
-				int currentFloor = ElevatorScene.scene.getCurrentFloorForElevator(this.number);
+			try{				
+				int extraSpace = MAX_PEOPLE - ElevatorScene.scene.getNumberOfPeopleInElevator(this.elevatorNr);
+				int currentFloor = ElevatorScene.scene.getCurrentFloorForElevator(this.elevatorNr);
+				
+				System.out.println("current floor: " + currentFloor);
 
 				for(int i = 0; i < extraSpace; i++) {
 					ElevatorScene.inSemaphores.get(currentFloor).release();
 				}
 		
 				Thread.sleep(ElevatorScene.VISUALIZATION_WAIT_TIME);
-				extraSpace = MAX_PEOPLE - ElevatorScene.scene.getNumberOfPeopleInElevator(this.number);
+				extraSpace = MAX_PEOPLE - ElevatorScene.scene.getNumberOfPeopleInElevator(this.elevatorNr);
 
 				for(int i = 0; i < extraSpace; i++) {
 					ElevatorScene.inSemaphores.get(currentFloor).acquire();
 				}
 				
-				ElevatorScene.scene.changeFloor();
+				ElevatorScene.scene.changeFloor(this.elevatorNr);
 				
 				Thread.sleep(ElevatorScene.VISUALIZATION_WAIT_TIME);
-				currentFloor =  ElevatorScene.scene.getCurrentFloorForElevator(this.number);
-				extraSpace = ElevatorScene.scene.getNumberOfPeopleInElevator(this.number);
+				currentFloor =  ElevatorScene.scene.getCurrentFloorForElevator(this.elevatorNr);
+				extraSpace = ElevatorScene.scene.getNumberOfPeopleInElevator(this.elevatorNr);
 				
 				for(int i = 0; i < extraSpace; i++) {
 					ElevatorScene.outSemaphores.get(currentFloor).release(); 
 				}
 				
 				Thread.sleep(ElevatorScene.VISUALIZATION_WAIT_TIME);
-				extraSpace = ElevatorScene.scene.getNumberOfPeopleInElevator(this.number);
+				extraSpace = ElevatorScene.scene.getNumberOfPeopleInElevator(this.elevatorNr);
                 for (int i = 0; i < extraSpace; i++){
                     ElevatorScene.outSemaphores.get(currentFloor).acquire();
                 }
