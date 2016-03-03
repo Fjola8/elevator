@@ -3,18 +3,12 @@ package com.ru.usty.elevator;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
-/**
- * The base function definitions of this class must stay the same
- * for the test suite and graphics to use.
- * You can add functions and/or change the functionality
- * of the operations at will.
- *
- */
-
 public class ElevatorScene {
 	
 	ArrayList<Integer> exitedCount = null;
 	public static Semaphore exitedCountMutex;
+	public static ElevatorScene scene;
+	
 	public static ArrayList<Semaphore> inSemaphores;
 	public static ArrayList<Semaphore> outSemaphores;
 	
@@ -22,24 +16,16 @@ public class ElevatorScene {
 	public static Semaphore elevatorWaitMutex; 
 	public static Semaphore elevatorPersonCountMutex;
 	public static Semaphore moveMutex;
-	public static ElevatorScene scene;
 	
-	//TO SPEED THINGS UP WHEN TESTING,
-	//feel free to change this.  It will be changed during grading
-	public static final int VISUALIZATION_WAIT_TIME = 500;  //milliseconds
+	public static final int VISUALIZATION_WAIT_TIME = 400;
 
 	private int nrOfPeopleInElevator;
 	private int numberOfFloors;
 	private int numberOfElevators;
 	private int currentFloor = 0;
-	public static boolean up = true;
-	ArrayList<Integer> personCount; //use if you want but
-									//throw away and
-									//implement differently
-									//if it suits you
+	private boolean up = true;
+	ArrayList<Integer> personCount; 
 
-	//Base function: definition must not change
-	//Necessary to add your code in this one
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
 		scene = this;
@@ -57,10 +43,9 @@ public class ElevatorScene {
 			outSemaphores.add(new Semaphore(0));
 		}
 		
-		Elevator elevator = new Elevator(currentFloor);
+		Elevator elevator = new Elevator();
 		Thread thread = new Thread(elevator);
 		thread.start();
-		System.out.println("elevator added");
 			
 		this.numberOfFloors = numberOfFloors;
 		this.numberOfElevators = numberOfElevators;
@@ -80,11 +65,8 @@ public class ElevatorScene {
 			this.exitedCount.add(0);
 		}
 		exitedCountMutex = new Semaphore(1);
-		
 	}
 
-	//Base function: definition must not change
-	//Necessary to add your code in this one
 	public Thread addPerson(int sourceFloor, int destinationFloor) {
 		
 		Person person = new Person(sourceFloor, destinationFloor);
@@ -92,27 +74,21 @@ public class ElevatorScene {
 		thread.start();
 		
 		incrementNrOfPeopleWaitingAtFloor(sourceFloor);
-		System.out.println("person added");
-		return thread; //this means that the testSuite will not wait for the threads to finish
+		return thread;
 	}
 
-	//Base function: definition must not change, but add your code
 	public int getCurrentFloorForElevator(int elevator) {
-		//dumb code, replace it!
 		return currentFloor;
 	}
 
-	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleInElevator(int elevator) {
-
 		return nrOfPeopleInElevator;
 	}
 	
 	public void incrementNrOfPeopleInElevator() {
-		System.out.println("hækka  people í lyftu!");
 		try{
 			elevatorPersonCountMutex.acquire();
-			nrOfPeopleInElevator ++;
+				nrOfPeopleInElevator ++;
 			elevatorPersonCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -121,10 +97,9 @@ public class ElevatorScene {
 	}
 
 	public void decrementNrOfPeopleInElevator() {
-		System.out.println("Lækka  people í lyftu!");
 		try{
 			elevatorPersonCountMutex.acquire();
-			nrOfPeopleInElevator --;
+				nrOfPeopleInElevator --;
 			elevatorPersonCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -132,12 +107,10 @@ public class ElevatorScene {
 		}	
 	}
 	
-	//Base function: definition must not change, but add your code
 	public int getNumberOfPeopleWaitingAtFloor(int floor) {
 		return personCount.get(floor);
 	}
 
-	//Við útfærðum þetta - lækkum personCount um 1:
 	public void decrementNrOfPeopleWaitingAtFloor(int floor) {
 		try {
 			personCountMutex.acquire();
@@ -161,23 +134,26 @@ public class ElevatorScene {
 	}
 	
 	public void changeFloor () {
-		if(this.currentFloor == 0){
-			up = true;
-		} else if (this.currentFloor == numberOfFloors - 1) {
+		if(currentFloor == numberOfFloors - 1){
 			up = false;
 		}
-		if (up){
+		else if (currentFloor == 0) {
+			up = true;
+		}
+		
+		if(up){
 			try {
 				moveMutex.acquire();
-					this.currentFloor++;
+					currentFloor++;
 				moveMutex.release();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		} else {
+		}
+		else {
 			try {
 				moveMutex.acquire();
-				this.currentFloor--;
+					currentFloor--;
 				moveMutex.release();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -185,12 +161,10 @@ public class ElevatorScene {
 		}
 	}
 	
-	//Base function: definition must not change, but add your code if needed
 	public int getNumberOfFloors() {
 		return numberOfFloors;
 	}
 
-	//Base function: definition must not change, but add your code if needed
 	public void setNumberOfFloors(int numberOfFloors) {
 		this.numberOfFloors = numberOfFloors;
 	}
@@ -220,10 +194,9 @@ public class ElevatorScene {
 	}
 	
 	public void personExitsAtFloor(int floor) {
-		try {
-			
+		try {	
 			exitedCountMutex.acquire();
-			exitedCount.set(floor, (exitedCount.get(floor) + 1));
+				exitedCount.set(floor, (exitedCount.get(floor) + 1));
 			exitedCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -239,6 +212,4 @@ public class ElevatorScene {
 			return 0;
 		}
 	}
-
-
 }
