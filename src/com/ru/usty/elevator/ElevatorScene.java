@@ -8,7 +8,7 @@ public class ElevatorScene {
 	ArrayList<Integer> exitedCount = null;
 	public static Semaphore exitedCountMutex;
 	public static ElevatorScene scene;
-	
+	public static ArrayList<Elevator> elevators;
 	public static ArrayList<Semaphore> inSemaphores;
 	public static ArrayList<Semaphore> outSemaphores;
 	
@@ -43,9 +43,11 @@ public class ElevatorScene {
 			outSemaphores.add(new Semaphore(0));
 		}
 		
-		Elevator elevator = new Elevator();
-		Thread thread = new Thread(elevator);
-		thread.start();
+		for(int i = 0; i < numberOfElevators; i++){
+			Elevator elevator = new Elevator(i);
+			Thread thread = new Thread(elevator);
+			thread.start();
+		}
 			
 		this.numberOfFloors = numberOfFloors;
 		this.numberOfElevators = numberOfElevators;
@@ -85,7 +87,7 @@ public class ElevatorScene {
 		return nrOfPeopleInElevator;
 	}
 	
-	public void incrementNrOfPeopleInElevator() {
+	public void incrementNrOfPeopleInElevator(int elevator) {
 		try{
 			elevatorPersonCountMutex.acquire();
 				nrOfPeopleInElevator ++;
@@ -96,7 +98,7 @@ public class ElevatorScene {
 		}
 	}
 
-	public void decrementNrOfPeopleInElevator() {
+	public void decrementNrOfPeopleInElevator(int elevator) {
 		try{
 			elevatorPersonCountMutex.acquire();
 				nrOfPeopleInElevator --;

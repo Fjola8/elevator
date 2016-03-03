@@ -3,6 +3,7 @@ package com.ru.usty.elevator;
 public class Person implements Runnable{
 	
 	private int startFloor, destinationFloor;
+	findElevator elevController = new findElevator();
 
 	public Person(int startFloor, int destinationFloor) {
 		this.startFloor = startFloor;
@@ -11,6 +12,7 @@ public class Person implements Runnable{
 	
 	@Override
 	public void run() {
+		int numberOfElevator = elevController.getElevator();
 		
 		try {
 			ElevatorScene.inSemaphores.get(startFloor).acquire();
@@ -20,7 +22,7 @@ public class Person implements Runnable{
 		}
 		
 		ElevatorScene.scene.decrementNrOfPeopleWaitingAtFloor(startFloor);
-		ElevatorScene.scene.incrementNrOfPeopleInElevator();
+		ElevatorScene.scene.incrementNrOfPeopleInElevator(numberOfElevator);
 	
 		try {
 			ElevatorScene.outSemaphores.get(destinationFloor).acquire();
@@ -29,7 +31,7 @@ public class Person implements Runnable{
 			e.printStackTrace();
 		}
 
-		ElevatorScene.scene.decrementNrOfPeopleInElevator();
+		ElevatorScene.scene.decrementNrOfPeopleInElevator(numberOfElevator);
 		
 		ElevatorScene.scene.personExitsAtFloor(destinationFloor);
 	}
