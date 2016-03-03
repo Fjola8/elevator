@@ -15,24 +15,24 @@ public class ElevatorScene {
 	
 	ArrayList<Integer> exitedCount = null;
 	public static Semaphore exitedCountMutex;
-
-	public static Semaphore inSemaphore;
-	public static Semaphore outSemaphore;
+	public static ArrayList<Semaphore> inSemaphores;
+	public static ArrayList<Semaphore> outSemaphores;
 	
 	public static Semaphore personCountMutex;
 	public static Semaphore elevatorWaitMutex; 
 	public static Semaphore elevatorPersonCountMutex;
-	
+	public static Semaphore moveMutex;
 	public static ElevatorScene scene;
 	
 	//TO SPEED THINGS UP WHEN TESTING,
 	//feel free to change this.  It will be changed during grading
-	public static final int VISUALIZATION_WAIT_TIME = 3000;  //milliseconds
+	public static final int VISUALIZATION_WAIT_TIME = 500;  //milliseconds
 
 	private int nrOfPeopleInElevator;
 	private int numberOfFloors;
 	private int numberOfElevators;
 	private int currentFloor = 0;
+	public static boolean up = true;
 	ArrayList<Integer> personCount; //use if you want but
 									//throw away and
 									//implement differently
@@ -43,11 +43,19 @@ public class ElevatorScene {
 	public void restartScene(int numberOfFloors, int numberOfElevators) {
 		
 		scene = this;
-		inSemaphore = new Semaphore(0);
-		outSemaphore = new Semaphore(0);
+		
 		personCountMutex = new Semaphore(1); 	
 		elevatorWaitMutex = new Semaphore(1);
-		
+		elevatorPersonCountMutex = new Semaphore(1);
+		moveMutex = new Semaphore(1);
+
+		inSemaphores = new ArrayList<Semaphore>();
+		outSemaphores = new ArrayList<Semaphore>();
+
+		for (int i = 0; i < numberOfFloors; i++){
+			inSemaphores.add(new Semaphore(0));
+			outSemaphores.add(new Semaphore(0));
+		}
 		
 		Elevator elevator = new Elevator(currentFloor);
 		Thread thread = new Thread(elevator);
@@ -102,7 +110,6 @@ public class ElevatorScene {
 	
 	public void incrementNrOfPeopleInElevator() {
 		System.out.println("hækka  people í lyftu!");
-	//	nrOfPeopleInElevator++;
 		try{
 			elevatorPersonCountMutex.acquire();
 			nrOfPeopleInElevator ++;
@@ -115,15 +122,14 @@ public class ElevatorScene {
 
 	public void decrementNrOfPeopleInElevator() {
 		System.out.println("Lækka  people í lyftu!");
-		nrOfPeopleInElevator--;
-		/*try{
+		try{
 			elevatorPersonCountMutex.acquire();
 			nrOfPeopleInElevator --;
 			elevatorPersonCountMutex.release();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	*/
+		}	
 	}
 	
 	//Base function: definition must not change, but add your code
@@ -154,17 +160,30 @@ public class ElevatorScene {
 		}
 	}
 	
-	public void changeFloor(){
-		
-		if(currentFloor == 0){
-			currentFloor++;
+	public void changeFloor () {
+		if(this.currentFloor == 0){
+			up = true;
+		} else if (this.currentFloor == numberOfFloors - 1) {
+			up = false;
 		}
-		else{
-			currentFloor--;
+		if (up){
+			try {
+				moveMutex.acquire();
+					this.currentFloor++;
+				moveMutex.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				moveMutex.acquire();
+				this.currentFloor--;
+				moveMutex.release();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	
-	
 	
 	//Base function: definition must not change, but add your code if needed
 	public int getNumberOfFloors() {
@@ -206,7 +225,6 @@ public class ElevatorScene {
 			exitedCountMutex.acquire();
 			exitedCount.set(floor, (exitedCount.get(floor) + 1));
 			exitedCountMutex.release();
-
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

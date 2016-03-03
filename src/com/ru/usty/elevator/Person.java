@@ -12,32 +12,32 @@ public class Person implements Runnable{
 	@Override
 	public void run() {
 		
+
 		try {
-			//ElevatorScene.elevatorWaitMutex.acquire();
-				ElevatorScene.inSemaphore.acquire();
-		//	ElevatorScene.elevatorWaitMutex.release();		
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		ElevatorScene.scene.decrementNrOfPeopleWaitingAtFloor(startFloor);
-		ElevatorScene.scene.incrementNrOfPeopleInElevator();
-		System.out.println("Person thread released"); 
-		int coun = ElevatorScene.scene.getNumberOfPeopleInElevator(0);
-		System.out.println("numberOfPeopleInEle" + coun);
-		
-		try {
-	//		ElevatorScene.elevatorWaitMutex.acquire();
-				ElevatorScene.outSemaphore.acquire();
-	//		ElevatorScene.elevatorWaitMutex.release();
+			ElevatorScene.inSemaphores.get(startFloor).acquire();
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		 
+		
+		ElevatorScene.scene.decrementNrOfPeopleWaitingAtFloor(startFloor);
+		ElevatorScene.scene.incrementNrOfPeopleInElevator();
+		
+		System.out.println("Person thread released"); 
+		int coun = ElevatorScene.scene.getNumberOfPeopleInElevator(0);
+		System.out.println("numberOfPeopleInEle" + coun);
+	
+		try {
+			ElevatorScene.outSemaphores.get(destinationFloor).acquire();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		
 		ElevatorScene.scene.decrementNrOfPeopleInElevator();
-		ElevatorScene.scene.personExitsAtFloor(1);
+		ElevatorScene.scene.personExitsAtFloor(destinationFloor);
 		System.out.println("Person thread released OUT");
 		
 	}
